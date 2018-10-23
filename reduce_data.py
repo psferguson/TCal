@@ -4,11 +4,13 @@ import os
 from astropy.io import fits
 import pandas as pd
 from statsmodels import robust
-path="/storage/research/instrumentation/Tcal/data/181012/"
+path="/storage/research/instrumentation/Tcal/data/181022/"
 files=os.listdir(path)
-images_list=[i for i in files if "nm.fits" in i ]
+images_list=[i for i in files if "0nm.fits" in i ]
+images_list=[i for i in files if "5nm.fits" in i]
 scan_list=[i for i in files if "scan.dat" in i ]
-
+lamlist=[float(i[0:3]) for i in images_list ]
+images_list=[x for _,x in sorted(zip(lamlist,images_list))]
 def im_sum_stat(image_name):
     light=path+image_name
     dark=path+image_name[0:len(image_name)-5]+"dark.fits"
@@ -18,31 +20,35 @@ def im_sum_stat(image_name):
     darkdat=darkimg[0].data
     subtracted=lightdat.astype(float)-darkdat.astype(float)
     median=np.median(subtracted)
-    mad=np.median(np.abs(subtracted-mn))
+    mad=np.median(np.abs(subtracted-median))
     lightimg.close()
     darkimg.close()
     return image_name,median,mad
-
 def phot_sum_stat(scan_name):
-    scan_name=scan_list[0]
     pdiode_frame=pd.read_csv(path+scan_name)
     range(int(len(pdiode_frame['Date'])/2))
     val=[]
+    errl=[]
+    errd=[]
+    nmeasl=[]
+    nmeasd=[]
     for i in range(int(len(pdiode_frame['Date'])/2)):
         light=pdiode_frame['Mean_Phot'][2*i]
         dark=pdiode_frame['Mean_Phot'][2*i+1]
         val.append(light-dark)
-    return val
+        errl.append(pdiode_frame['SD_phot'][2*i])
+        errd.append(pdiode_frame['SD_phot'][2*i+1])
+        nmeasl.append(pdiode_frame['num_read_phot'][2*i])
+        nmeasd.append(pdiode_frame['num_read_phot'][2*i+1])
+    return val, errl,errd,nmeasl,nmeasd
 
 images_summary=[im_sum_stat(i) for i in images_list]
 imstats=pd.DataFrame({'name':[i[0] for i in images_summary],'median_img':[i[1] for i in images_summary],'mad_img':[i[2] for i in images_summary]})
 imstats['lam']=[float(i[0:3]) for i in imstats['name']]
-imstats['phot_mean']=phot_sum_stat(scan_list[0])
-
-
-imstats.to_csv(path+"ccd_summary.csv", index=False)
+imstats['phot_mean'],imstats['phot_sd_l'],imstats['phot_sd_d'],imstats['phot_nmeas_l'],imstats['phot_nmeas_d']=phot_sum_stat(scan_list[0])
+imstats.to_csv(path+"ccd_summary_1.csv", index=False)
 import matplotlib.pyplot as plt
-plt.plot(imstats['lam'],imstats['mean_img'])
+plt.plot(imstats['lam'],imstats['median_img'])
 alt.Chart(imstats).mark_line().encode(
     x='lam',
     y='mean_img',
