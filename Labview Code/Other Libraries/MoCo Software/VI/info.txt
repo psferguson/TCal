@@ -1,3 +1,0 @@
-INFO
-
-Main VI is moco.vi
