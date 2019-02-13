@@ -4,6 +4,7 @@ import os
 from astropy.io import fits
 import pandas as pd
 from statsmodels import robust
+<<<<<<< HEAD:reduce_data.py
 path="C:\\Users\\astrolab\\Desktop\\Peter_Ferguson\\TCal\\scans\\190125\\"
 path
 files=os.listdir(path)
@@ -12,6 +13,8 @@ images_list=[i for i in files if "5nm.fits" in i]
 scan_list=[i for i in files if "scan.dat" in i ]
 lamlist=[float(i[0:3]) for i in images_list ]
 images_list=[x for _,x in sorted(zip(lamlist,images_list))]
+=======
+>>>>>>> fa670579dda14bf75e9a0fad2ed325cb389928db:reduction_scripts/reduce_data.py
 def im_sum_stat(image_name):
     light=path+image_name
     dark=path+image_name[0:len(image_name)-5]+"dark.fits"
@@ -43,6 +46,14 @@ def phot_sum_stat(scan_name):
         nmeasd.append(pdiode_frame['num_read_phot'][2*i+1])
     return val, errl,errd,nmeasl,nmeasd
 
+
+path="/storage/research/instrumentation/Tcal/data/181217/repeatability_test/Scan5/"
+files=os.listdir(path)
+images_list=[i for i in files if "0nm.fits" in i ]
+#images_list=[i for i in files if "5nm.fits" in i]
+scan_list=[i for i in files if "scan.dat" in i ]
+lamlist=[float(i[0:3]) for i in images_list ]
+images_list=[x for _,x in sorted(zip(lamlist,images_list))]
 images_summary=[im_sum_stat(i) for i in images_list]
 imstats=pd.DataFrame({'name':[i[0] for i in images_summary],'median_img':[i[1] for i in images_summary],'mad_img':[i[2] for i in images_summary]})
 imstats['lam']=[float(i[0:3]) for i in imstats['name']]
