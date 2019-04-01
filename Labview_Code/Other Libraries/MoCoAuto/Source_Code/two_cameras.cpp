@@ -34,7 +34,7 @@ Command line arguements should be passed in the following order and manner-
 7. Absolute path to desired image save directory   <--- Not yet implemented, so only 5 CL arguments are required.
 */
 /* to compile run the follwoing command in visual c++
-cl /EHsc two_cameras.cpp csbigcam.cpp csbigimg.cpp SBIGUDrv.lib  cfitsio.lib /Fe..\CCDautomation2camera.exe
+	cl /EHsc two_cameras.cpp csbigcam.cpp csbigimg.cpp SBIGUDrv.lib  cfitsio.lib /Fe..\CCDautomation2camera.exe
 */
 
 
