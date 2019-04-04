@@ -213,6 +213,7 @@ int main(int argc, char *argv[])
 						pImg1->AutoBackgroundAndRange();
 						pImg1->HorizontalFlip();
 						pImg1->VerticalFlip();
+						return pImg1;
 						},
 				[&]{pCam2->GrabImage(pImg2, SBDF_LIGHT_ONLY);}
 			);
