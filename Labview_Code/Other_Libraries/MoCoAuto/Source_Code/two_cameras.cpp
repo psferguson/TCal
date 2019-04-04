@@ -31,7 +31,7 @@ Command line arguements should be passed in the following order and manner-
 4. Starting Wavelength [nanometers]
 5. Ending Wavelength [nanometers]
 6. Increment [nanometers]
-7. Absolute path to desired image save directory   <--- Not yet implemented, so only 5 CL arguments are required.
+7. Scan Prefix
 */
 /* to compile run the follwoing command in visual c++
 	cl /EHsc two_cameras.cpp csbigcam.cpp csbigimg.cpp SBIGUDrv.lib  cfitsio.lib /Fe..\CCDautomation2camera.exe
@@ -42,6 +42,7 @@ Command line arguements should be passed in the following order and manner-
  #include <config.h>
 #endif
 
+#include <ppl.h>
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
@@ -53,6 +54,7 @@ Command line arguements should be passed in the following order and manner-
 #include <windows.h>
 #include <time.h>
 
+using namespace concurrency;
 using namespace std;
 
 #include "csbigcam.h"
@@ -203,8 +205,12 @@ int main(int argc, char *argv[])
 				cout << "Taking dark image on " << sPort1 << "..." << endl;
       pImg1 = new CSBIGImg;
       pImg2 = new CSBIGImg;
-      pCam1->GrabImage(pImg1, SBDF_LIGHT_ONLY);
-      pCam2->GrabImage(pImg2, SBDF_LIGHT_ONLY);
+
+
+      concurrency::parallel_invoke(
+				[&]{pCam1->GrabImage(pImg1, SBDF_LIGHT_ONLY);},
+				[&]{pCam2->GrabImage(pImg2, SBDF_LIGHT_ONLY);}
+			);
       pImg1->AutoBackgroundAndRange();
       pImg2->AutoBackgroundAndRange();
       pImg1->HorizontalFlip();
