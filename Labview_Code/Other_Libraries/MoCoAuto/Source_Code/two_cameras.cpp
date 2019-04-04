@@ -203,19 +203,24 @@ int main(int argc, char *argv[])
 				cout << "Taking light image on " << sPort1 << "..." << endl;
 			else
 				cout << "Taking dark image on " << sPort1 << "..." << endl;
-      pImg1 = new CSBIGImg;
+
       pImg2 = new CSBIGImg;
 
 
       concurrency::parallel_invoke(
-				[&]{pCam1->GrabImage(pImg1, SBDF_LIGHT_ONLY);},
+				[&]{pImg1 = new CSBIGImg;
+						pCam1->GrabImage(pImg1, SBDF_LIGHT_ONLY);
+						pImg1->AutoBackgroundAndRange();
+						pImg1->HorizontalFlip();
+						pImg1->VerticalFlip();
+						},
 				[&]{pCam2->GrabImage(pImg2, SBDF_LIGHT_ONLY);}
 			);
-      pImg1->AutoBackgroundAndRange();
+
       pImg2->AutoBackgroundAndRange();
-      pImg1->HorizontalFlip();
+
       pImg2->HorizontalFlip();
-      pImg1->VerticalFlip();
+
       pImg2->VerticalFlip();
 
 			if (err != 0)
