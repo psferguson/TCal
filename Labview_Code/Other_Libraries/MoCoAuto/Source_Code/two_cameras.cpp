@@ -208,17 +208,26 @@ int main(int argc, char *argv[])
 
 
       concurrency::parallel_invoke(
-				[&]{ cout << "im here"<< endl;
+				[&]{ cout << "im here1"<< endl;
 				    pImg1 = new CSBIGImg;
 
 						pCam1->GrabImage(pImg1, SBDF_LIGHT_ONLY);
 						pImg1->AutoBackgroundAndRange();
 						pImg1->HorizontalFlip();
 						pImg1->VerticalFlip();
-						cout << "im here"<< endl;
+						cout << "im here3"<< endl;
 						return pImg1;
 						},
-				[&]{pCam2->GrabImage(pImg2, SBDF_LIGHT_ONLY);}
+				[&]{ cout << "im here2"<< endl;
+				    pImg2 = new CSBIGImg;
+
+						pCam2->GrabImage(pImg1, SBDF_LIGHT_ONLY);
+						pImg2->AutoBackgroundAndRange();
+						pImg2->HorizontalFlip();
+						pImg2->VerticalFlip();
+						cout << "im here4"<< endl;
+						return pImg2;
+						}}
 			);
 
       pImg2->AutoBackgroundAndRange();

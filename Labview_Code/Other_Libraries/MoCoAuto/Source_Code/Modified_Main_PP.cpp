@@ -4,7 +4,7 @@
 	file.  It (should) work(s) with any SBIG camera that uses the SBIG universal driver,
 	but testing has only been done with an STF-8300M and ST-402 (the red and black SBIG CCDs in the lab).
 
-	Current known/suspected bugs and Unimplemented features-- 
+	Current known/suspected bugs and Unimplemented features--
 
 	Using the GetGrabState function causes the camera to miss readout steps for some reason unbeknownst to me.  As such,
 	The LabView program just times how long the PD stays on using a wait command, rather than explicitly stopping the PD
@@ -18,6 +18,7 @@
 	|-----------------|----------|------------------------------------------------------------------------------------------------|
 	|Nicholas Mondrik |07/08/2013|Finished Primary Features.  Still need to implement Temperature Control and other documentation.|
 	|Nicholas Mondrik |07/12/2013|Finished Secondary Features.  Darks and Temperature Control are now active.                     |
+  |Peter Ferguson   |05/29/2019|Adding in prefix to image names
 */
 
 /*
@@ -28,7 +29,10 @@ Command line arguements should be passed in the following order and manner-
 4. Starting Wavelength [nanometers]
 5. Ending Wavelength [nanometers]
 6. Increment [nanometers]
-7. Absolute path to desired image save directory   <--- Not yet implemented, so only 5 CL arguments are required.
+7. Scan Prefix
+*/
+/* to compile run the follwoing command in visual c++
+	cl /EHsc Modified_Main_PP.cpp csbigcam.cpp csbigimg.cpp SBIGUDrv.lib  cfitsio.lib /Fe..\CCDautomation_prefix.exe
 */
 
 
@@ -83,6 +87,12 @@ int debugfunc(CSBIGCam *cptr, int wavel, double exptime) {
 };
 
 
+
+
+
+
+
+
 int main(int argc, char *argv[])
 {
 	CSBIGCam *pCam = (CSBIGCam *)0;
@@ -102,6 +112,8 @@ int main(int argc, char *argv[])
 	vector<int> wlvector(1,wlstart);
 	int i = 1;
 	int n = 0;
+  string scanprefix=argv[7];
+  string cname;
 	stringstream sstrm;
 	string imname;
 	bool isdark = false;
@@ -124,9 +136,9 @@ int main(int argc, char *argv[])
 		cout << "Link Established to Camera Type: " << pCam->GetCameraTypeString() << endl;
 		if ( (err = pCam->GetFullFrame(width, height)) != CE_NO_ERROR )
 			break;
+    cname=pCam->GetCameraTypeString();
 
 
-		
 		//CCD Tempset
 		if (enabletempreg) {
 			cout << "Setting CCD temperature to " << tempset << " degrees Celsius.  Please wait..." << endl;
@@ -136,7 +148,7 @@ int main(int argc, char *argv[])
 		}
 		//Confirmation of range and increment
 		cout << "The requested wavelength scan begins at " << wlstart << " and ends at " << wlend << " with step size " << wlincrement << endl;
-		
+
 		do {
 			if (wlvector[i-1] == wlend) {
 				break;
@@ -147,11 +159,12 @@ int main(int argc, char *argv[])
 		} while(1);
 
 		cout << "The exposure time requested is " << exposuretime << " seconds." <<endl;  //Avg readout time for ST-8300M ~= 9s
-		pCam->SetExposureTime(exposuretime);
-		
-		//This loop watches for a file named "communication.txt" in the specified directory.  When LabView wants to get an image, it creates the "communication.txt" file. 
+    cout << "Scan prefix is "<< scanprefix << endl;
+    pCam->SetExposureTime(exposuretime);
+
+		//This loop watches for a file named "communication.txt" in the specified directory.  When LabView wants to get an image, it creates the "communication.txt" file.
 		//The program takes the image with the desired exposure parameters.  Once readout is finished, the program deletes the "communication.txt" file and LabView continues
-		//to the next wavelength.  To properly shutdown the device and drivers, a file named "shutdown.txt" is created, which causes the program to break out of the loop 
+		//to the next wavelength.  To properly shutdown the device and drivers, a file named "shutdown.txt" is created, which causes the program to break out of the loop
 		//and shut down.  This file can be generated when LabView is done with the automation process by pressing the stop button in the bottom left of the front panel.
 
 		//It should be noted that the process goes LIGHT[XXXnm] --> DARK[XXXnm] --> LIGHT[XXX+1nm] --> DARK[XXX+1nm] and so forth, as seen by the isdark flag.
@@ -179,7 +192,7 @@ int main(int argc, char *argv[])
 			pImg->AutoBackgroundAndRange();
 			pImg->HorizontalFlip();
 			pImg->VerticalFlip();
-		
+
 			if (err != 0)
 				cout << "The error code from image acquisition is " << err << " which corresponds to " << pCam->GetErrorString(err) << endl;
 			else
@@ -189,7 +202,7 @@ int main(int argc, char *argv[])
 
 			//Save Image
 			if (!isdark) {
-				sstrm << wlvector[n] << "nm.fits";
+				sstrm << scanprefix << "_" << cname <<"_" << wlvector[n] << "_" << "nm.fits";
 				imname = sstrm.str();
 				cout << "Saving image " << imname << "..." << endl;
 				if ( (ferr = pImg->SaveImage(imname.c_str(), SBIF_FITS)) != SBFE_NO_ERROR )
@@ -197,7 +210,7 @@ int main(int argc, char *argv[])
 				sstrm.str("");
 				isdark = true;
 			} else {
-				sstrm << wlvector[n] << "nmdark.fits";
+				sstrm << scanprefix << "_" << cname <<"_" << wlvector[n] << "_" << "nm_dark.fits";
 				imname = sstrm.str();
 				cout << "Saving image " << imname << "..." << endl;
 				if ( (ferr = pImg->SaveImage(imname.c_str(), SBIF_FITS)) != SBFE_NO_ERROR )
@@ -215,7 +228,7 @@ int main(int argc, char *argv[])
 				cout << "Attempting to delete communication file..." << endl;
 			} while(remove("communication.txt") != 0);
 			cout << "Communication file deleted, CCD is ready for the next exposure." << endl;
-		
+
 			}
 
 		} while(1);
