@@ -204,6 +204,7 @@ int main(int argc, char *argv[])
 			else
 				cout << "Taking dark image on " << sPort1 << "..." << endl;
 
+<<<<<<< HEAD
       pImg2 = new CSBIGImg;
 
 
@@ -241,6 +242,43 @@ int main(int argc, char *argv[])
 			else
 				cout << "Image acquisition completed without error." << endl;
 
+=======
+        concurrency::parallel_invoke(
+                [&]{
+                    cout << "im here2"<< endl;
+                    pImg2 = new CSBIGImg;
+
+                    pCam2->GrabImage(pImg2, SBDF_LIGHT_ONLY);
+                    if (err != 0)
+                      cout << "The error code from image acquisition is " << err << " which corresponds to " << pCam1->GetErrorString(err) << endl;
+                    else
+                      cout << "Image 2 acquisition completed without error." << endl;
+                    pImg2->AutoBackgroundAndRange();
+                    pImg2->HorizontalFlip();
+                    pImg2->VerticalFlip();
+                    cout << "im here4"<< endl;
+                    return pImg2;
+                  },
+        				[&]{
+                    cout << "im here1"<< endl;
+        				    pImg1 = new CSBIGImg;
+
+        						pCam1->GrabImage(pImg1, SBDF_LIGHT_ONLY);
+      
+                    if (err != 0)
+              				cout << "The error code from image acquisition is " << err << " which corresponds to " << pCam1->GetErrorString(err) << endl;
+              			else
+              				cout << "Image 1 acquisition completed without error." << endl;
+
+        						pImg1->AutoBackgroundAndRange();
+        						pImg1->HorizontalFlip();
+        						pImg1->VerticalFlip();
+        						cout << "im here3"<< endl;
+        						return pImg1;
+        						}
+
+        			);
+>>>>>>> c2683f7682368371e0d985692fc44aa96d76c61d
 
 
 			//Save Image
